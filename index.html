@@ -7,15 +7,42 @@
     <div id="map" style="width:50%;height:500px"></div>
 
     <script>
-     function myMap() {
+     function initMap() {
          var mapCanvas = document.getElementById("map");
          var mapOptions = {
-             center: new google.maps.LatLng(51.5, -0.2),
-             zoom: 10
+             center: new google.maps.LatLng(52.170573, 0.111123),
+             zoom: 50
          }
          var map = new google.maps.Map(mapCanvas, mapOptions);
+
+         heatmap = new google.maps.visualization.HeatmapLayer({
+             data: getPoints(),
+             dissipating: true,
+             radius: 10,
+             map: map
+         });
+
+         function getPoints() {
+             var coordinates = [];
+             var xhttp = new XMLHttpRequest();
+             xhttp.onreadystatechange = function(result) {
+                 if (this.readyState == 4 && this.status == 200) {
+                     var jsonObj = JSON.parse(xhttp.responseText);
+
+                     for (var i=0; i<jsonObj.length; i++) {
+                         var coords = (jsonObj[i]['location']);
+                         coordinates.push({location: new google.maps.LatLng(parseFloat(coords[0]), parseFloat(coords[1])), weight: Math.random()});
+                     }
+                 }
+             }
+             xhttp.open('GET', 'jsonDataFile.json', true);
+             xhttp.send();
+
+             return coordinates;
+         }
+
      }
     </script>
 
-    <script src="https://maps.googleapis.com/maps/api/js?callback=myMap"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?&libraries=visualization&callback=initMap"></script>
 </body>
