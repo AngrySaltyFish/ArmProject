@@ -6,7 +6,48 @@
 
     <div id="map" style="width:50%;height:500px"></div>
 
+    <div id="upload-interface">
+        <h4>Data Upload instructions</h4>
+        <ol>
+            <li>First plug in the device into the usb port</li>
+            <li>You then need to click the browse button below</li>
+            <li>Then select the file you wish to upload and click ok</li>
+            <li>Then click the upload button beside it</li>
+        </ol>
+
+        <form action="#" id="form" method="POST">
+            <input type="file" id="file-select" name="data" multiple/>
+            <button type="submit" id="upload-button">Upload</button>
+        </form>
+    </div>
+
     <script>
+     var form = document.getElementById("form");
+     var fileSelect = document.getElementById("file-select");
+     var uploadButton = document.getElementById("upload-button");
+
+     form.onsubmit = function(event) {
+         event.preventDefault();
+
+         uploadButton.innerHtml = "Uploading";
+
+         var files = fileSelect.files;
+         var formData = new FormData();
+
+         for (var i=0; i<files.length; i++)
+             formData.append("data", files[i], files[i].name);
+
+         var xhttp = new XMLHttpRequest();
+         xhttp.open("POST", "dataUpload", true);
+
+         xhttp.onload = function() {
+             if (xhttp.status == 200)
+                 uploadButton.innerHtml = "Upload";
+         }
+
+         xhttp.send(formData);
+     }
+
      function initMap() {
          var mapCanvas = document.getElementById("map");
          var mapOptions = {
