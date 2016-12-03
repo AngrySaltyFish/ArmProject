@@ -4,10 +4,11 @@ import ssl
 import json
 import sqlite3
 
+
 class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
-        if self.path == '/datafromDB':
+        if self.path == "/datafromDB":
             self.wfile.write(database.getValues())
         else:
             self.homepage()
@@ -21,9 +22,9 @@ class Handler(BaseHTTPRequestHandler):
         self.homepage()
 
     def homepage(self):
-        with open('index.html', 'rb') as file:
+        with open("index.html", "rb") as file:
             self.send_response(200)
-            self.send_header('Content-type', 'text/html')
+            self.send_header("Content-type", "text/html")
             self.end_headers()
             self.wfile.write(file.read())
 
@@ -49,7 +50,7 @@ class CreateDatabase():
     def insertValues(self, rawData):
         try:
             str = rawData.decode()
-            data = json.loads(str[str.find("["):str.rfind("]")+1])
+            data = json.loads(str[str.find("["):str.rfind("]") + 1])
 
             for item in data:
                 self.c.execute("""
@@ -72,10 +73,14 @@ class CreateDatabase():
 
 if __name__ == "__main__":
     database = CreateDatabase()
-    server = socketserver.TCPServer(('', 80), Handler)
-    server.socket = ssl.wrap_socket (server.socket, certfile='cert.pem', keyfile='key.pem', server_side=True)
+    server = socketserver.TCPServer(("", 80), Handler)
+    server.socket = ssl.wrap_socket(
+        server.socket,
+        certfile="cert.pem",
+        keyfile="key.pem",
+        server_side=True)
 
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        print(' Recieved Shutting Down')
+        print(" Recieved Shutting Down")
