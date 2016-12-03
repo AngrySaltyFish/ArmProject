@@ -1,6 +1,8 @@
 <!DOCTYPE html>
+
 <head>
 </head>
+
 <body>
     <h1>MapTest</h1>
 
@@ -34,7 +36,7 @@
          var files = fileSelect.files;
          var formData = new FormData();
 
-         for (var i=0; i<files.length; i++)
+         for (var i = 0; i < files.length; i++)
              formData.append("data", files[i], files[i].name);
 
          var xhttp = new XMLHttpRequest();
@@ -73,11 +75,14 @@
                                          .replace("[", "")
                                          .split("),");
 
-                     for (var i=0; i<textData.length; i++) {
+                     for (var i = 0; i < textData.length; i++) {
                          textData[i] = textData[i].replace("(", ""); //:TODO make this so you don't need the iterator
                          var values = textData[i].split(",");
 
-                         coordinates.push({location: new google.maps.LatLng(parseFloat(values[0]), parseFloat(values[1])), weight: Math.random()});
+                         coordinates.push({
+                             location: new google.maps.LatLng(parseFloat(values[0]), parseFloat(values[1])),
+                             weight: Math.random()
+                         });
                      }
                  }
              }
