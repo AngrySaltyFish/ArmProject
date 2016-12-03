@@ -7,12 +7,8 @@ import sqlite3
 class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
-        if self.path == '/jsonDataFile.json':
-            with open('jsonDataFile.json', 'rb') as file:
-                self.send_response(200)
-                self.send_header('Content-type', 'json')
-                self.end_headers()
-                self.wfile.write(file.read())
+        if self.path == '/datafromDB':
+            self.wfile.write(database.getValues())
         else:
             self.homepage()
 
@@ -31,7 +27,9 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(file.read())
 
+
 class CreateDatabase():
+
     def __init__(self):
         self.dbinit()
 
@@ -49,8 +47,6 @@ class CreateDatabase():
         """)
 
     def insertValues(self, rawData):
-        #data = json.dumps(rawData)
-
         try:
             str = rawData.decode()
             data = json.loads(str[str.find("["):str.rfind("]")+1])
@@ -68,6 +64,11 @@ class CreateDatabase():
 
         except Exception as e:
             print(e)
+
+    def getValues(self):
+        self.c.execute("SELECT * FROM data")
+        return str(self.c.fetchall()).encode()
+
 
 if __name__ == "__main__":
     database = CreateDatabase()
