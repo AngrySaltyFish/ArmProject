@@ -68,15 +68,20 @@
              var xhttp = new XMLHttpRequest();
              xhttp.onreadystatechange = function(result) {
                  if (this.readyState == 4 && this.status == 200) {
-                     var jsonObj = JSON.parse(xhttp.responseText);
+                     var textData = xhttp.responseText
+                                         .replace("]", "")
+                                         .replace("[", "")
+                                         .split("),");
 
-                     for (var i=0; i<jsonObj.length; i++) {
-                         var coords = (jsonObj[i]['location']);
-                         coordinates.push({location: new google.maps.LatLng(parseFloat(coords[0]), parseFloat(coords[1])), weight: Math.random()});
+                     for (var i=0; i<textData.length; i++) {
+                         textData[i] = textData[i].replace("(", ""); //:TODO make this so you don't need the iterator
+                         var values = textData[i].split(",");
+
+                         coordinates.push({location: new google.maps.LatLng(parseFloat(values[0]), parseFloat(values[1])), weight: Math.random()});
                      }
                  }
              }
-             xhttp.open('GET', 'jsonDataFile.json', true);
+             xhttp.open('GET', 'datafromDB', true);
              xhttp.send();
 
              return coordinates;
