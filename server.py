@@ -60,7 +60,10 @@ class CreateDatabase():
                     ?,
                     ?
                 )
-                """, (item["location"][0], item["location"][1], item["C02"], item["C0"]))
+                """, (item["location"][0],
+                      item["location"][1],
+                      item["C02"],
+                      item["C0"]))
             self.conn.commit()
 
         except Exception as e:
