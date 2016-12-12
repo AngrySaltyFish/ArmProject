@@ -51,6 +51,7 @@
      }
 
      function initMap() {
+         var coordinates = [];
          var mapCanvas = document.getElementById("map");
          var mapOptions = {
              center: new google.maps.LatLng(52.170573, 0.111123),
@@ -58,17 +59,18 @@
          }
          var map = new google.maps.Map(mapCanvas, mapOptions);
 
+         getPoints();
+
          heatmap = new google.maps.visualization.HeatmapLayer({
-             data: getPoints(),
+             data: coordinates,
              dissipating: true,
              radius: 10,
              map: map
          });
 
          function getPoints() {
-             var coordinates = [];
              var xhttp = new XMLHttpRequest();
-             xhttp.onreadystatechange = function(result) {
+             xhttp.onreadystatechange = function() {
                  if (this.readyState == 4 && this.status == 200) {
                      var textData = xhttp.responseText
                                          .replace("]", "")
@@ -81,17 +83,46 @@
 
                          coordinates.push({
                              location: new google.maps.LatLng(parseFloat(values[0]), parseFloat(values[1])),
-                             weight: Math.random()
+                             weight: Math.random(),
+                             pollutants: {"C02":values[2], "C0":values[3]}
                          });
                      }
+                     mapInteractivity();
                  }
              }
              xhttp.open('GET', 'datafromDB', true);
              xhttp.send();
-
-             return coordinates;
          }
 
+         function mapInteractivity() {
+             var info = new google.maps.InfoWindow();
+
+             for (var i = 0; i < coordinates.length; i++) {
+                 var marker = new google.maps.Marker({
+                     position: coordinates[i]["location"],
+                     pollutants: coordinates[i]["pollutants"],
+                     opacity: 0,
+                     map: map,
+                     icon: {
+                         path: google.maps.SymbolPath.CIRCLE,
+                         scale: 10
+                     }
+                 });
+                 google.maps.event.addListener(marker, "mouseover", function(event) {
+                     var contentString = "";
+                     for (var pollutant in this["pollutants"])
+                         contentString += "<h4>"+pollutant+": "+this["pollutants"][pollutant];
+
+                     console.log(this["polluntants"]);
+
+                     info.setContent(contentString);
+                     info.open(map, this);
+                 });
+                 google.maps.event.addListener(marker, "mouseout", function(event) {
+                     info.close();
+                 });
+             }
+         }
      }
     </script>
 
