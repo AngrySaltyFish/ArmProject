@@ -4,96 +4,130 @@
 </head>
 
 <body>
-    <h1>MapTest</h1>
+	<h1>MapTest</h1>
 
-    <div id="map" style="width:50%;height:500px"></div>
+	<div id="map" style="width:50%;height:500px"></div>
 
-    <div id="upload-interface">
-        <h4>Data Upload instructions</h4>
-        <ol>
-            <li>First plug in the device into the usb port</li>
-            <li>You then need to click the browse button below</li>
-            <li>Then select the file you wish to upload and click ok</li>
-            <li>Then click the upload button beside it</li>
-        </ol>
+	<div id="upload-interface">
+		<h4>Data Upload instructions</h4>
+		<ol>
+			<li>First plug in the device into the usb port</li>
+			<li>You then need to click the browse button below</li>
+			<li>Then select the file you wish to upload and click ok</li>
+			<li>Then click the upload button beside it</li>
+		</ol>
 
-        <form action="#" id="form" method="POST">
-            <input type="file" id="file-select" name="data" multiple/>
-            <button type="submit" id="upload-button">Upload</button>
-        </form>
-    </div>
+		<form action="#" id="form" method="POST">
+			<input type="file" id="file-select" name="data" multiple/>
+			<button type="submit" id="upload-button">Upload</button>
+		</form>
+	</div>
 
-    <script>
-     var form = document.getElementById("form");
-     var fileSelect = document.getElementById("file-select");
-     var uploadButton = document.getElementById("upload-button");
+	<script>
+		var form = document.getElementById("form");
+		var fileSelect = document.getElementById("file-select");
+		var uploadButton = document.getElementById("upload-button");
 
-     form.onsubmit = function(event) {
-         event.preventDefault();
+		form.onsubmit = function(event) {
+			event.preventDefault();
 
-         uploadButton.innerHtml = "Uploading";
+			uploadButton.innerHtml = "Uploading";
 
-         var files = fileSelect.files;
-         var formData = new FormData();
+			var files = fileSelect.files;
+			var formData = new FormData();
 
-         for (var i = 0; i < files.length; i++)
-             formData.append("data", files[i], files[i].name);
+			for (var i = 0; i < files.length; i++)
+				formData.append("data", files[i], files[i].name);
 
-         var xhttp = new XMLHttpRequest();
-         xhttp.open("POST", "dataUpload", true);
+			var xhttp = new XMLHttpRequest();
+			xhttp.open("POST", "dataUpload", true);
 
-         xhttp.onload = function() {
-             if (xhttp.status == 200)
-                 uploadButton.innerHtml = "Upload";
-         }
+			xhttp.onload = function() {
+				if (xhttp.status == 200)
+					uploadButton.innerHtml = "Upload";
+			}
 
-         xhttp.send(formData);
-     }
+			xhttp.send(formData);
+		}
 
-     function initMap() {
-         var mapCanvas = document.getElementById("map");
-         var mapOptions = {
-             center: new google.maps.LatLng(52.170573, 0.111123),
-             zoom: 50
-         }
-         var map = new google.maps.Map(mapCanvas, mapOptions);
+		function initMap() {
+			var coordinates = [];
+			var cirlces = [];
+			var mapCanvas = document.getElementById("map");
+			var mapOptions = {
+				center: new google.maps.LatLng(52.170573, 0.111123),
+				zoom: 50
+			}
+			var map = new google.maps.Map(mapCanvas, mapOptions);
 
-         heatmap = new google.maps.visualization.HeatmapLayer({
-             data: getPoints(),
-             dissipating: true,
-             radius: 10,
-             map: map
-         });
+			getPoints();
 
-         function getPoints() {
-             var coordinates = [];
-             var xhttp = new XMLHttpRequest();
-             xhttp.onreadystatechange = function(result) {
-                 if (this.readyState == 4 && this.status == 200) {
-                     var textData = xhttp.responseText
-                                         .replace("]", "")
-                                         .replace("[", "")
-                                         .split("),");
+			heatmap = new google.maps.visualization.HeatmapLayer({
+				data: coordinates,
+				dissipating: true,
+				radius: 10,
+				map: map
+			});
 
-                     for (var i = 0; i < textData.length; i++) {
-                         textData[i] = textData[i].replace("(", ""); //:TODO make this so you don't need the iterator
-                         var values = textData[i].split(",");
+			function getPoints() {
+				var xhttp = new XMLHttpRequest();
+				xhttp.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						var textData = xhttp.responseText
+							.replace("]", "")
+							.replace("[", "")
+							.split("),");
 
-                         coordinates.push({
-                             location: new google.maps.LatLng(parseFloat(values[0]), parseFloat(values[1])),
-                             weight: Math.random()
-                         });
-                     }
-                 }
-             }
-             xhttp.open('GET', 'datafromDB', true);
-             xhttp.send();
+						for (var i = 0; i < textData.length; i++) {
+							textData[i] = textData[i].replace("(", ""); //:TODO make this so you don't need the iterator
+							var values = textData[i].split(",");
 
-             return coordinates;
-         }
+							coordinates.push({
+								location: new google.maps.LatLng(parseFloat(values[0]), parseFloat(values[1])),
+								weight: Math.random(),
+								pollutants: {
+									"C02": values[2],
+									"C0": values[3]
+								}
+							});
+						}
+						mapInteractivity();
+					}
+				}
+				xhttp.open('GET', 'datafromDB', true);
+				xhttp.send();
+			}
 
-     }
-    </script>
+			function mapInteractivity() {
+				var info = new google.maps.InfoWindow();
 
-    <script src="https://maps.googleapis.com/maps/api/js?&libraries=visualization&callback=initMap"></script>
+				for (var i = 0; i < coordinates.length; i++) {
+					var marker = new google.maps.Circle({
+						center: coordinates[i]["location"],
+						pollutants: coordinates[i]["pollutants"],
+						fillOpacity: 0,
+						map: map,
+						scale: 10,
+						radius: 5,
+						clickable: true
+					});
+					google.maps.event.addListener(marker, "mouseover", function(event) {
+						var contentString = "";
+						for (var pollutant in this["pollutants"])
+							contentString += "<h4>" + pollutant + ": " + this["pollutants"][pollutant];
+
+						info.setContent(contentString);
+						info.setPosition(this["center"]);
+						info.open(map);
+					});
+					google.maps.event.addListener(marker, "mouseout", function(event) {
+						info.close();
+					});
+					cirlces.push(marker);
+				}
+			}
+		}
+	</script>
+
+	<script src="https://maps.googleapis.com/maps/api/js?&libraries=visualization&callback=initMap"></script>
 </body>
