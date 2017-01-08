@@ -66,6 +66,23 @@ class CreateDatabase():
                       item["C0"]))
             self.conn.commit()
 
+            self.c.execute("SELECT * FROM data")
+            data = self.c.fetchall()
+            for dataItem in range(len(data)):
+                self.c.execute("SELECT * FROM data WHERE lat=%s AND lng=%s" % (data[dataItem][0], data[dataItem][1]))
+                duplicates = self.c.fetchall()
+                if len(duplicates) > 0:
+                    self.c.execute("UPDATE data SET C0 = ? WHERE lat = ? AND lng = ?", (
+                        (data[dataItem][2] / len(duplicates),
+                         data[dataItem][0],
+                         data[dataItem][1]
+                    )))
+                    self.c.execute("UPDATE data SET C02 = ? WHERE lat = ? AND lng = ?", (
+                        (data[dataItem][2] / len(duplicates),
+                         data[dataItem][0],
+                         data[dataItem][1]
+                    )))
+
         except Exception as e:
             print(e)
 
