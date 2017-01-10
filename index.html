@@ -8,6 +8,13 @@
 
 	<div id="map" style="width:50%;height:500px"></div>
 
+	<div id="overlayInterface">
+		<input type="checkbox" onclick="this.parentNode.toggleOverlays(this)">C02</input>
+		<input type="checkbox" onclick="this.parentNode.toggleOverlays(this)">C0</input>
+		<input type="checkbox" onclick="this.parentNode.toggleOverlays(this)">otherPollutant</input>
+		<input type="checkbox" onclick="this.parentNode.toggleOverlays(this)">otherPollutant</input>
+	</div>
+
 	<div id="upload-interface">
 		<h4>Data Upload instructions</h4>
 		<ol>
@@ -23,7 +30,7 @@
 		</form>
 	</div>
 
-	<script>
+	<script type="text/javascript">
 		var form = document.getElementById("form");
 		var fileSelect = document.getElementById("file-select");
 		var uploadButton = document.getElementById("upload-button");
@@ -52,6 +59,7 @@
 
 		function initMap() {
 			var coordinates = [];
+			var overlays = {};
 			var mapCanvas = document.getElementById("map");
 			var mapOptions = {
 				center: new google.maps.LatLng(52.170573, 0.111123),
@@ -61,12 +69,43 @@
 
 			getPoints();
 
-			heatmap = new google.maps.visualization.HeatmapLayer({
-				data: coordinates,
-				dissipating: true,
-				radius: 10,
-				map: map
-			});
+			function generateOverlays() {
+				var gradients = {};
+				var colours = [
+					"0, 255, 0",
+					"255, 0, 0",
+					"0, 0, 255"
+				];
+				var colourCounter = 0;
+
+				for (var pollutant in coordinates[0]["pollutants"]) {
+					colourCounter++;
+					gradients[pollutant] = [];
+					for (var i = 0.0; i < 1; i+=0.1)
+						gradients[pollutant].push("rgba("+colours[colourCounter]+","+i+")");
+
+					var heatmap = new google.maps.visualization.HeatmapLayer({
+						data: coordinates,
+						dissipating: true,
+						opacity: 0.6,
+						gradient: gradients[pollutant],
+						radius: (colourCounter*20),
+						map: map
+					});
+					overlays[pollutant] = heatmap;
+				}
+
+				var checkboxDiv = document.getElementById("overlayInterface");
+
+				for (var i = 0; i < checkboxDiv.childElementCount; i++)
+					checkboxDiv.children[i].checked = true;
+
+				checkboxDiv.toggleOverlays = function(element) {
+					var pollutant = element.nextSibling.textContent.trim();
+					overlays[pollutant].set("opacity", overlays[pollutant].get("opacity")==0.6 ? 0:0.6);
+				}
+			}
+
 
 			function getPoints() {
 				var xhttp = new XMLHttpRequest();
@@ -91,6 +130,7 @@
 							});
 						}
 						mapInteractivity();
+						generateOverlays();
 					}
 				}
 				xhttp.open('GET', 'datafromDB', true);
@@ -115,8 +155,6 @@
 						var contentString = "";
 						for (var pollutant in this["pollutants"])
 							contentString += "<h4>" + pollutant + ": " + this["pollutants"][pollutant];
-
-						console.log(this["polluntants"]);
 
 						info.setContent(contentString);
 						info.open(map, this);
