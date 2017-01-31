@@ -10,6 +10,17 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/datafromDB":
             self.wfile.write(database.getValues())
+
+        elif len(self.path) > 1:
+            with open(self.path[1:], "rb") as file:
+                self.send_response(200)
+                if "js" in self.path:
+                    self.send_header("Content-type", "text/javascript")
+                else:
+                    self.send_header("Content-type", "text/css")
+                self.end_headers()
+                self.wfile.write(file.read())
+
         else:
             self.homepage()
 
@@ -55,6 +66,8 @@ class CreateDatabase():
             for item in data:
                 self.c.execute("""
                 INSERT INTO data VALUES (
+                    ?,
+                    ?,
                     ?,
                     ?,
                     ?,
