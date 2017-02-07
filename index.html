@@ -23,7 +23,7 @@
 		    <div id="upload-interface">
 			      <h4>Data Upload instructions</h4>
 			      <ol>
-				        <li>First plug in the device into the usb port</li>
+				       to <li>First plug in the device into the usb port</li>
 				        <li>You then need to click the browse button below</li>
 				        <li>Then select the file you wish to upload and click ok</li>
 				        <li>Then click the upload button beside it</li>
@@ -64,8 +64,9 @@
 		 }
 
 		 function initMap() {
-			   var coordinates = [];
+			   var coordinates = {};
 			   var overlays = {};
+         var routes = {};
 			   var mapCanvas = document.getElementById("map");
 			   var mapOptions = {
 				     center: new google.maps.LatLng(52.170573, 0.111123),
@@ -82,24 +83,27 @@
 					       "255, 0, 0",
 					       "0, 0, 255"
 				     ];
-				     var colourCounter = 0;
 
-				     for (var pollutant in coordinates[0]["pollutants"]) {
-					       colourCounter++;
-					       gradients[pollutant] = [];
-					       for (var i = 0.0; i < 1; i += 0.1)
-						         gradients[pollutant].push("rgba(" + colours[colourCounter] + "," + i + ")");
+             for (var routeID in coordinates) {
+                 var colourCounter = 0;
+                 for (var pollutant in coordinates[routeID][0]["pollutants"]) {
+					           gradients[pollutant] = [];
+                     colourCounter++;
+					           for (var i = 0.0; i < 1; i += 0.1)
+						             gradients[pollutant].push("rgba(" + colours[colourCounter] + "," + i + ")");
 
-					       var heatmap = new google.maps.visualization.HeatmapLayer({
-						         data: coordinates,
-						         dissipating: true,
-						         opacity: 0.6,
-						         gradient: gradients[pollutant],
-						         radius: (colourCounter * 20),
-						         map: map
-					       });
-					       overlays[pollutant] = heatmap;
-				     }
+					           var heatmap = new google.maps.visualization.HeatmapLayer({
+						             data: coordinates[routeID],
+						             dissipating: true,
+						             opacity: 0.6,
+						             gradient: gradients[pollutant],
+						             radius: (colourCounter * 20),
+						             map: map
+					           });
+					           overlays[pollutant] = heatmap;
+				         }
+                 routes[routeID] = overlays;
+             }
 
 				     var checkboxDiv = document.getElementById("overlayInterface");
 
@@ -108,7 +112,11 @@
 
 				     checkboxDiv.toggleOverlays = function(element) {
 					       var pollutant = element.nextSibling.textContent.trim();
-					       overlays[pollutant].set("opacity", overlays[pollutant].get("opacity") == 0.6 ? 0 : 0.6);
+                 for (var id in coordinates) {
+                     console.log(routes[id][pollutant]);
+                     routes[id][pollutant].set("opacity", 0);
+					           routes[id][pollutant].set("opacity", routes[id][pollutant].get("opacity") == 0.6 ? 0 : 0.6);
+                  };
 				     }
 			   }
 
@@ -126,9 +134,12 @@
 							           textData[i] = textData[i].replace("(", ""); //:TODO make this so you don't need the iterator
 							           var values = textData[i].split(",");
 
-							           coordinates.push({
+                         if (typeof coordinates[values[4]] == "undefined")
+                             coordinates[values[4]] = [];
+							           coordinates[values[4]].push({
 								             location: new google.maps.LatLng(parseFloat(values[0]), parseFloat(values[1])),
 								             weight: Math.random(),
+                             routeID: values[4],
 								             pollutants: {
 									               "C02": values[2],
 									               "C0": values[3]
@@ -146,34 +157,40 @@
 			   function mapInteractivity() {
 				     var info = new google.maps.InfoWindow();
 
-				     for (var i = 0; i < coordinates.length; i++) {
-                 console.log(coordinates[i]["location"].lat());
-                 var proj = map.getProjection();
+             for (var id in coordinates) {
+                 console.log(coordinates[id].length);
 
-                 var point = proj.fromLatLngToPoint(coordinates[i]["location"]);
-                 //point.x -= 5;
-                 //point.y -= 5;
-                 var offsetCoord = proj.fromPointToLatLng(point);
+				         for (var i = 0; i < coordinates[id].length; i++) {
 
-					       var marker = new google.maps.Marker({
-						         position: offsetCoord,
-						         pollutants: coordinates[i]["pollutants"],
-                     anchorPoint:  new google.maps.Point({x:100, y:100}),
-						         opacity: 1,
-						         map: map
-					       });
-					       google.maps.event.addListener(marker, "mouseover", function(event) {
-						         var contentString = "";
-						         for (var pollutant in this["pollutants"])
-							           contentString += "<h4>" + pollutant + ": " + this["pollutants"][pollutant];
+					           var marker = new google.maps.Marker({
+						             position: coordinates[id][i]["location"],
+						             pollutants: coordinates[id][i]["pollutants"],
+                         routeID: coordinates[id][i]["routeID"],
+                         //anchorPoint:  new google.maps.Point({x:100, y:100}),
+						             opacity: 0,
+						             map: map
+					           });
+					           google.maps.event.addListener(marker, "mouseover", function(event) {
+						             var contentString = "";
+                         console.log(routes);
+						             for (var pollutant in this["pollutants"]) {
+							               contentString += "<h4>" + pollutant + ": " + this["pollutants"][pollutant];
+                             routes[this["routeID"]][pollutant].set("opacity", 0.9);
+                         }
 
-						         info.setContent(contentString);
-						         info.open(map, this);
-					       });
-					       google.maps.event.addListener(marker, "mouseout", function(event) {
-						         info.close();
-					       });
-				     }
+                         //coordinates[this["routeID"]][pollutant].set("opacity", 0.9);
+
+						             info.setContent(contentString);
+						             info.open(map, this);
+					           });
+					           google.maps.event.addListener(marker, "mouseout", function(event) {
+                         for (var pollutant in this["pollutants"]) {
+                             routes[this["routeID"]][pollutant].set("opacity", 0);
+                         }
+						             info.close();
+					           });
+				         }
+             }
 			   }
 		 }
 	  </script>
