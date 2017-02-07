@@ -102,8 +102,11 @@
 					           });
 					           overlays[pollutant] = heatmap;
 				         }
+                 //if (typeof routes[routeID] == "undefined")
+                 //    routes[routeID] = [];
                  routes[routeID] = overlays;
              }
+             console.log(routes);
 
 				     var checkboxDiv = document.getElementById("overlayInterface");
 
@@ -112,10 +115,10 @@
 
 				     checkboxDiv.toggleOverlays = function(element) {
 					       var pollutant = element.nextSibling.textContent.trim();
-                 for (var id in coordinates) {
-                     console.log(routes[id][pollutant]);
-                     routes[id][pollutant].set("opacity", 0);
-					           routes[id][pollutant].set("opacity", routes[id][pollutant].get("opacity") == 0.6 ? 0 : 0.6);
+                 for (var id in routes) {
+                     console.log("id is " + overlays[pollutant] + " and opacity " + overlays[pollutant].get("opacity"));
+					           overlays[pollutant].set("opacity", routes[id][pollutant].get("opacity") == 0.6 ? 0 : 0.6);
+                     console.log("id is " + overlays[pollutant] + " and opacity " + overlays[pollutant].get("opacity"));
                   };
 				     }
 			   }
