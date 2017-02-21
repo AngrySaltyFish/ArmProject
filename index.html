@@ -147,18 +147,9 @@
 				     var info = new google.maps.InfoWindow();
 
 				     for (var i = 0; i < coordinates.length; i++) {
-                 console.log(coordinates[i]["location"].lat());
-                 var proj = map.getProjection();
-
-                 var point = proj.fromLatLngToPoint(coordinates[i]["location"]);
-                 //point.x -= 5;
-                 //point.y -= 5;
-                 var offsetCoord = proj.fromPointToLatLng(point);
-
 					       var marker = new google.maps.Marker({
-						         position: offsetCoord,
+						         position: coordinates[i]["location"],
 						         pollutants: coordinates[i]["pollutants"],
-                     anchorPoint:  new google.maps.Point({x:100, y:100}),
 						         opacity: 1,
 						         map: map
 					       });
