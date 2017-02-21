@@ -69,8 +69,6 @@ class CreateDatabase():
                     ?,
                     ?,
                     ?,
-                    ?,
-                    ?,
                     ?
                 )
                 """, (item["location"][0],
@@ -79,22 +77,36 @@ class CreateDatabase():
                       item["C0"]))
             self.conn.commit()
 
+            gases = list(item.keys())[:-1]
+
             self.c.execute("SELECT * FROM data")
             data = self.c.fetchall()
+
             for dataItem in range(len(data)):
                 self.c.execute("SELECT * FROM data WHERE lat=%s AND lng=%s" % (data[dataItem][0], data[dataItem][1]))
                 duplicates = self.c.fetchall()
-                if len(duplicates) > 0:
-                    self.c.execute("UPDATE data SET C0 = ? WHERE lat = ? AND lng = ?", (
-                        (data[dataItem][2] / len(duplicates),
-                         data[dataItem][0],
-                         data[dataItem][1]
-                    )))
-                    self.c.execute("UPDATE data SET C02 = ? WHERE lat = ? AND lng = ?", (
-                        (data[dataItem][2] / len(duplicates),
-                         data[dataItem][0],
-                         data[dataItem][1]
-                    )))
+
+                if len(duplicates) > 1:
+                    for item in duplicates:
+                        if duplicates.index(item) == 0:
+                            for gas in gases:
+                                total = 0
+                                for duplicate in duplicates:
+                                    total += duplicate[gases.index(gas)+2]
+                                self.c.execute("UPDATE data SET ?=? WHERE lat=? AND lng=?", (
+                                    gas,
+                                    int(total / len(duplicates)),
+                                     item[0],
+                                     item[1]
+                                    ))
+                        else:
+
+                            self.c.execute("DELETE FROM data WHERE lat=? AND lng=? AND C02=?", (
+                                item[0],
+                                item[1],
+                                item[2]
+                            ))
+            self.conn.commit()
 
         except Exception as e:
             print(e)
