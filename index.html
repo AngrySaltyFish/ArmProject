@@ -133,7 +133,7 @@
 
                          if (typeof coordinates[values[4]] == "undefined")
                              coordinates[values[4]] = [];
-							               coordinates[values[4]].push({
+							           coordinates[values[4]].push({
 								             location: new google.maps.LatLng(parseFloat(values[0]), parseFloat(values[1])),
 								             weight: Math.random(),
                              routeID: values[4],
@@ -155,6 +155,7 @@
 				     var info = new google.maps.InfoWindow();
 
              for (var id in coordinates) {
+                 console.log(coordinates[id].length);
 
 				         for (var i = 0; i < coordinates[id].length; i++) {
 
@@ -162,24 +163,26 @@
 						             position: coordinates[id][i]["location"],
 						             pollutants: coordinates[id][i]["pollutants"],
                          routeID: coordinates[id][i]["routeID"],
+                         //anchorPoint:  new google.maps.Point({x:100, y:100}),
 						             opacity: 0,
 						             map: map
 					           });
 					           google.maps.event.addListener(marker, "mouseover", function(event) {
 						             var contentString = "";
+                         console.log(routes);
 						             for (var pollutant in this["pollutants"]) {
 							               contentString += "<h4>" + pollutant + ": " + this["pollutants"][pollutant];
-                             if (routes[this["routeID"]][pollutant].get("opacity"))
-                                 routes[this["routeID"]][pollutant].set("opacity", 0.6);
+                             routes[this["routeID"]][pollutant].set("opacity", 0.9);
                          }
+
+                         //coordinates[this["routeID"]][pollutant].set("opacity", 0.9);
 
 						             info.setContent(contentString);
 						             info.open(map, this);
 					           });
 					           google.maps.event.addListener(marker, "mouseout", function(event) {
                          for (var pollutant in this["pollutants"]) {
-                             if (routes[this["routeID"]][pollutant].get("opacity"))
-                                 routes[this["routeID"]][pollutant].set("opacity", 0.3);
+                             routes[this["routeID"]][pollutant].set("opacity", 0);
                          }
 						             info.close();
 					           });
