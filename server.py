@@ -19,8 +19,8 @@ class Handler(BaseHTTPRequestHandler):
                         self.send_header("Content-type", "text/javascript")
                     else:
                         self.send_header("Content-type", "text/css")
-                        self.end_headers()
-                        self.wfile.write(file.read())
+                    self.end_headers()
+                    self.wfile.write(file.read())
 
             else:
                 self.homepage()
@@ -58,8 +58,7 @@ class CreateDatabase():
             lat int(4),
             lng int(4),
             C02 int(1),
-            C0 int(1),
-            routeID int(1)
+            C0 int(1)
         )
         """)
 
@@ -67,7 +66,6 @@ class CreateDatabase():
         try:
             str = rawData.decode()
             data = json.loads(str[str.find("["):str.rfind("]") + 1])
-            id = self.getRouteID()
 
             for item in data:
                 self.c.execute("""
@@ -75,49 +73,32 @@ class CreateDatabase():
                     ?,
                     ?,
                     ?,
-<<<<<<< HEAD
-=======
                     ?,
->>>>>>> deliciousCake
+                    ?,
                     ?
                 )
                 """, (item["location"][0],
                       item["location"][1],
                       item["C02"],
-                      item["C0"],
-                      id))
+                      item["C0"]))
             self.conn.commit()
-
-            gases = list(item.keys())[:-1]
 
             self.c.execute("SELECT * FROM data")
             data = self.c.fetchall()
-
             for dataItem in range(len(data)):
                 self.c.execute("SELECT * FROM data WHERE lat=%s AND lng=%s" % (data[dataItem][0], data[dataItem][1]))
                 duplicates = self.c.fetchall()
-
-                if len(duplicates) > 1:
-                    for item in duplicates:
-                        if duplicates.index(item) == 0:
-                            for gas in gases:
-                                total = 0
-                                for duplicate in duplicates:
-                                    total += duplicate[gases.index(gas)+2]
-                                self.c.execute("UPDATE data SET ?=? WHERE lat=? AND lng=?", (
-                                    gas,
-                                    int(total / len(duplicates)),
-                                     item[0],
-                                     item[1]
-                                    ))
-                        else:
-
-                            self.c.execute("DELETE FROM data WHERE lat=? AND lng=? AND C02=?", (
-                                item[0],
-                                item[1],
-                                item[2]
-                            ))
-            self.conn.commit()
+                if len(duplicates) > 0:
+                    self.c.execute("UPDATE data SET C0 = ? WHERE lat = ? AND lng = ?", (
+                        (data[dataItem][2] / len(duplicates),
+                         data[dataItem][0],
+                         data[dataItem][1]
+                    )))
+                    self.c.execute("UPDATE data SET C02 = ? WHERE lat = ? AND lng = ?", (
+                        (data[dataItem][2] / len(duplicates),
+                         data[dataItem][0],
+                         data[dataItem][1]
+                    )))
 
         except Exception as e:
             print(e)
@@ -125,15 +106,6 @@ class CreateDatabase():
     def getValues(self):
         self.c.execute("SELECT * FROM data")
         return str(self.c.fetchall()).encode()
-
-    def getRouteID(self):
-        self.c.execute("SELECT * FROM data")
-        data = self.c.fetchall()
-        if len(data) > 1:
-            print(data[-1][4] + 1)
-            return data[-1][4] + 1
-        else:
-            return 0
 
 
 if __name__ == "__main__":
