@@ -112,11 +112,8 @@
 
 				     checkboxDiv.toggleOverlays = function(element) {
 					       var pollutant = element.nextSibling.textContent.trim();
-                 for (var id in coordinates) {
-                     console.log(routes[id][pollutant]);
-                     routes[id][pollutant].set("opacity", 0);
-					           routes[id][pollutant].set("opacity", routes[id][pollutant].get("opacity") == 0.6 ? 0 : 0.6);
-                  };
+                 for (var id in coordinates)
+					           routes[id][pollutant].set("opacity", routes[id][pollutant].get("opacity") > 0 ? 0 : 0.3);
 				     }
 			   }
 
@@ -158,7 +155,6 @@
 				     var info = new google.maps.InfoWindow();
 
              for (var id in coordinates) {
-                 console.log(coordinates[id].length);
 
 				         for (var i = 0; i < coordinates[id].length; i++) {
 
@@ -166,26 +162,24 @@
 						             position: coordinates[id][i]["location"],
 						             pollutants: coordinates[id][i]["pollutants"],
                          routeID: coordinates[id][i]["routeID"],
-                         //anchorPoint:  new google.maps.Point({x:100, y:100}),
 						             opacity: 0,
 						             map: map
 					           });
 					           google.maps.event.addListener(marker, "mouseover", function(event) {
 						             var contentString = "";
-                         console.log(routes);
 						             for (var pollutant in this["pollutants"]) {
 							               contentString += "<h4>" + pollutant + ": " + this["pollutants"][pollutant];
-                             routes[this["routeID"]][pollutant].set("opacity", 0.9);
+                             if (routes[this["routeID"]][pollutant].get("opacity"))
+                                 routes[this["routeID"]][pollutant].set("opacity", 0.6);
                          }
-
-                         //coordinates[this["routeID"]][pollutant].set("opacity", 0.9);
 
 						             info.setContent(contentString);
 						             info.open(map, this);
 					           });
 					           google.maps.event.addListener(marker, "mouseout", function(event) {
                          for (var pollutant in this["pollutants"]) {
-                             routes[this["routeID"]][pollutant].set("opacity", 0);
+                             if (routes[this["routeID"]][pollutant].get("opacity"))
+                                 routes[this["routeID"]][pollutant].set("opacity", 0.3);
                          }
 						             info.close();
 					           });
