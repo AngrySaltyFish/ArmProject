@@ -154,16 +154,12 @@
 			   function mapInteractivity() {
 				     var info = new google.maps.InfoWindow();
 
-<<<<<<< HEAD
+
 				     for (var i = 0; i < coordinates.length; i++) {
 					       var marker = new google.maps.Marker({
 						         position: coordinates[i]["location"],
 						         pollutants: coordinates[i]["pollutants"],
-<<<<<<< HEAD
 						         opacity: 0,
-=======
-						         opacity: 1,
->>>>>>> 1a8f1ad74f729aeb76131b6b1dc23f7a83b8317b
 						         map: map
 					       });
 					       google.maps.event.addListener(marker, "mouseover", function(event) {
@@ -178,9 +174,8 @@
 						         info.close();
 					       });
 				     }
-=======
+
              for (var id in coordinates) {
-                 console.log(coordinates[id].length);
 
 				         for (var i = 0; i < coordinates[id].length; i++) {
 
@@ -194,26 +189,24 @@
 					           });
 					           google.maps.event.addListener(marker, "mouseover", function(event) {
 						             var contentString = "";
-                         console.log(routes);
 						             for (var pollutant in this["pollutants"]) {
 							               contentString += "<h4>" + pollutant + ": " + this["pollutants"][pollutant];
                              routes[this["routeID"]][pollutant].set("opacity", 0.9);
                          }
 
-                         //coordinates[this["routeID"]][pollutant].set("opacity", 0.9);
 
 						             info.setContent(contentString);
 						             info.open(map, this);
 					           });
 					           google.maps.event.addListener(marker, "mouseout", function(event) {
                          for (var pollutant in this["pollutants"]) {
-                             routes[this["routeID"]][pollutant].set("opacity", 0);
+                             routes[this["routeID"]][pollutant].set("opacity", 0.3);
                          }
 						             info.close();
 					           });
 				         }
              }
->>>>>>> deliciousCake
+
 			   }
 		 }
 	  </script>
