@@ -191,7 +191,8 @@
 						             var contentString = "";
 						             for (var pollutant in this["pollutants"]) {
 							               contentString += "<h4>" + pollutant + ": " + this["pollutants"][pollutant];
-                             routes[this["routeID"]][pollutant].set("opacity", 0.9);
+                             if (routes[this["routeID"]][pollutant].get("opacity") != 0)
+                                 routes[this["routeID"]][pollutant].set("opacity", 0.6);
                          }
 
 
@@ -200,6 +201,7 @@
 					           });
 					           google.maps.event.addListener(marker, "mouseout", function(event) {
                          for (var pollutant in this["pollutants"]) {
+                             if (routes[this["routeID"]][pollutant].get("opacity") != 0)
                              routes[this["routeID"]][pollutant].set("opacity", 0.3);
                          }
 						             info.close();
