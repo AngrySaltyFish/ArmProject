@@ -57,17 +57,46 @@ class CreateDatabase():
         CREATE TABLE IF NOT EXISTS data (
             lat int(4),
             lng int(4),
-            C02 int(1),
-            C0 int(1)
+            sound int(1),
+            CO int(1),
+            airquality int(1),
+            routeID int(1)
         )
         """)
+
+        data = self.c.execute('select * from data')
+
+        self.collums = list(map(lambda x: x[0], data.description))
+
+    def generateID(self):
+        self.c.execute("SELECT * FROM data")
+        try:
+            lastID = self.c.fetchall()[-1][-1]
+            print(lastID)
+        except:
+            lastID = 0
+        return lastID+1
 
     def insertValues(self, rawData):
         try:
             str = rawData.decode()
+            str = str[:str.rfind('}')+1] + ']' + str[str.rfind('}')+1:]
+
             data = json.loads(str[str.find("["):str.rfind("]") + 1])
+            id = self.generateID()
 
             for item in data:
+                values = []
+                for key, value in item.items() :
+                    if isinstance( value, (frozenset, list, set, tuple,) ):
+                        for coord in value:
+                            values.append(coord)
+                    else:
+                        values.append(value)
+
+                values = list(reversed(values))
+                values.append(id)
+
                 self.c.execute("""
                 INSERT INTO data VALUES (
                     ?,
@@ -77,10 +106,8 @@ class CreateDatabase():
                     ?,
                     ?
                 )
-                """, (item["location"][0],
-                      item["location"][1],
-                      item["C02"],
-                      item["C0"]))
+                """, (values))
+                print(values)
             self.conn.commit()
 
             self.c.execute("SELECT * FROM data")
@@ -89,16 +116,28 @@ class CreateDatabase():
                 self.c.execute("SELECT * FROM data WHERE lat=%s AND lng=%s" % (data[dataItem][0], data[dataItem][1]))
                 duplicates = self.c.fetchall()
                 if len(duplicates) > 0:
-                    self.c.execute("UPDATE data SET C0 = ? WHERE lat = ? AND lng = ?", (
-                        (data[dataItem][2] / len(duplicates),
-                         data[dataItem][0],
-                         data[dataItem][1]
-                    )))
-                    self.c.execute("UPDATE data SET C02 = ? WHERE lat = ? AND lng = ?", (
-                        (data[dataItem][2] / len(duplicates),
-                         data[dataItem][0],
-                         data[dataItem][1]
-                    )))
+                    average = [sum(x) for x in zip(*duplicates)]
+
+                    for item in range(len(average)):
+                        average[item] /= len(duplicates)
+
+                    for duplicate in duplicates:
+                        self.c.execute("""DELETE FROM data WHERE
+                        lat=%s AND lng=%s
+                        """ % (data[dataItem][0], data[dataItem][1]))
+
+                    average[-1] = duplicates[0][-1]
+                    self.c.execute("""
+                    INSERT INTO data VALUES (
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?
+                    )
+                    """, (average))
+                    self.conn.commit()
 
         except Exception as e:
             print(e)

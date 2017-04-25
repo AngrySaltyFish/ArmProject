@@ -14,10 +14,11 @@
 		    <div id="map" style="width:100%;height:500px"></div>
 
 		    <div id="overlayInterface">
-			      <input type="checkbox" onclick="this.parentNode.toggleOverlays(this)">C02</input>
-			      <input type="checkbox" onclick="this.parentNode.toggleOverlays(this)">C0</input>
-			      <input type="checkbox" onclick="this.parentNode.toggleOverlays(this)">gas</input>
-			      <input type="checkbox" onclick="this.parentNode.toggleOverlays(this)">gas</input>
+            <ul id="checkboxes">
+			          <li><input type="checkbox" onclick="this.parentNode.parentNode.toggleOverlays(this)">CO</input></li>
+			          <li><input type="checkbox" onclick="this.parentNode.parentNode.toggleOverlays(this)">NOX</input></li>
+			          <li><input type="checkbox" onclick="this.parentNode.parentNode.toggleOverlays(this)">sound</input></li>
+            </ul>
 		    </div>
 
 		    <div id="upload-interface">
@@ -70,7 +71,7 @@
 			   var mapCanvas = document.getElementById("map");
 			   var mapOptions = {
 				     center: new google.maps.LatLng(52.170573, 0.111123),
-				     zoom: 50
+				     zoom: 0
 			   }
 			   var map = new google.maps.Map(mapCanvas, mapOptions);
 
@@ -81,7 +82,8 @@
 				     var colours = [
 					       "0, 255, 0",
 					       "255, 0, 0",
-					       "0, 0, 255"
+					       "0, 0, 255",
+                 "207, 21, 21"
 				     ];
 
              for (var routeID in coordinates) {
@@ -95,7 +97,7 @@
 					           var heatmap = new google.maps.visualization.HeatmapLayer({
 						             data: coordinates[routeID],
 						             dissipating: true,
-						             opacity: 0.6,
+						             opacity: 0.6-(colourCounter/10),
 						             gradient: gradients[pollutant],
 						             radius: (colourCounter * 20),
 						             map: map
@@ -105,15 +107,21 @@
                  routes[routeID] = overlays;
              }
 
-				     var checkboxDiv = document.getElementById("overlayInterface");
+				     var checkboxDiv = document.getElementById("checkboxes");
 
 				     for (var i = 0; i < checkboxDiv.childElementCount; i++)
-					       checkboxDiv.children[i].checked = true;
+					       checkboxDiv.children[i].children[0].checked = true;
 
 				     checkboxDiv.toggleOverlays = function(element) {
 					       var pollutant = element.nextSibling.textContent.trim();
-                 for (var id in coordinates)
+                 for (var id in coordinates) {
+                     console.log(routes[id][pollutant].get("opacity"));
+                     console.log(pollutant);
+                     console.log(routes);
+                     console.log(routes[id][pollutant])
+                     //routes[id][pollutant].set("opacity", 0);
 					           routes[id][pollutant].set("opacity", routes[id][pollutant].get("opacity") > 0 ? 0 : 0.3);
+                 }
 				     }
 			   }
 
@@ -131,15 +139,16 @@
 							           textData[i] = textData[i].replace("(", ""); //:TODO make this so you don't need the iterator
 							           var values = textData[i].split(",");
 
-                         if (typeof coordinates[values[4]] == "undefined")
-                             coordinates[values[4]] = [];
-							           coordinates[values[4]].push({
-								             location: new google.maps.LatLng(parseFloat(values[0]), parseFloat(values[1])),
-								             weight: Math.random(),
-                             routeID: values[4],
+                         if (typeof coordinates[values[5]] == "undefined")
+                             coordinates[values[5]] = [];
+							           coordinates[values[5]].push({
+								             location: new google.maps.LatLng(parseFloat(values[1]), parseFloat(values[0])),
+								             weight: generateWeight(values[2], values[3], values[4]),
+                             routeID: values[5],
 								             pollutants: {
-									               "C02": values[2],
-									               "C0": values[3]
+									               "sound": values[2],
+									               "CO": values[3],
+                                 "NOX": values[4]
 								             }
 							           });
 						         }
@@ -148,18 +157,26 @@
 					       }
 				     }
 				     xhttp.open('GET', 'datafromDB', true);
+             xhttp.setRequestHeader("Content-Type", "application/json");
 				     xhttp.send();
 			   }
 
+         function generateWeight (sound, CO, NOX) {
+             var percentageSound = (sound/90.7461139896373)*100
+             var percentageNOX = (NOX/1.4849881485383196)*100
+             var percentageCO = ((1-CO)/1)*100
+
+             return (percentageSound+percentageNOX+percentageCO)/3;
+         }
+
 			   function mapInteractivity() {
 				     var info = new google.maps.InfoWindow();
-
 
 				     for (var i = 0; i < coordinates.length; i++) {
 					       var marker = new google.maps.Marker({
 						         position: coordinates[i]["location"],
 						         pollutants: coordinates[i]["pollutants"],
-						         opacity: 0,
+						         opacity: 1,
 						         map: map
 					       });
 					       google.maps.event.addListener(marker, "mouseover", function(event) {
@@ -183,7 +200,6 @@
 						             position: coordinates[id][i]["location"],
 						             pollutants: coordinates[id][i]["pollutants"],
                          routeID: coordinates[id][i]["routeID"],
-                         //anchorPoint:  new google.maps.Point({x:100, y:100}),
 						             opacity: 0,
 						             map: map
 					           });
@@ -202,7 +218,7 @@
 					           google.maps.event.addListener(marker, "mouseout", function(event) {
                          for (var pollutant in this["pollutants"]) {
                              if (routes[this["routeID"]][pollutant].get("opacity") != 0)
-                             routes[this["routeID"]][pollutant].set("opacity", 0.3);
+                                 routes[this["routeID"]][pollutant].set("opacity", 0.3);
                          }
 						             info.close();
 					           });
