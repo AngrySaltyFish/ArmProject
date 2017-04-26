@@ -82,8 +82,8 @@
 				     var colours = [
 					       "0, 255, 0",
 					       "255, 0, 0",
-					       "0, 0, 255",
-                 "207, 21, 21"
+					       "0, 255, 0",
+                 "0, 0, 255"
 				     ];
 
              for (var routeID in coordinates) {
@@ -99,11 +99,12 @@
 						             dissipating: true,
 						             opacity: 0.6-(colourCounter/10),
 						             gradient: gradients[pollutant],
-						             radius: (colourCounter * 20),
+						             radius: (colourCounter * 5),
 						             map: map
 					           });
 					           overlays[pollutant] = heatmap;
 				         }
+
                  routes[routeID] = overlays;
              }
 
@@ -113,13 +114,9 @@
 					       checkboxDiv.children[i].children[0].checked = true;
 
 				     checkboxDiv.toggleOverlays = function(element) {
+                 console.log(Object.keys(routes));
 					       var pollutant = element.nextSibling.textContent.trim();
                  for (var id in coordinates) {
-                     console.log(routes[id][pollutant].get("opacity"));
-                     console.log(pollutant);
-                     console.log(routes);
-                     console.log(routes[id][pollutant])
-                     //routes[id][pollutant].set("opacity", 0);
 					           routes[id][pollutant].set("opacity", routes[id][pollutant].get("opacity") > 0 ? 0 : 0.3);
                  }
 				     }
@@ -137,7 +134,10 @@
 
 						         for (var i = 0; i < textData.length; i++) {
 							           textData[i] = textData[i].replace("(", ""); //:TODO make this so you don't need the iterator
-							           var values = textData[i].split(",");
+                         textData[i] = textData[i].replace(")", ""); //:TODO make this so you don't need the iterator
+
+                         var values = textData[i].split(",");
+                         values[5] = values[5].trim();
 
                          if (typeof coordinates[values[5]] == "undefined")
                              coordinates[values[5]] = [];
@@ -164,7 +164,7 @@
          function generateWeight (sound, CO, NOX) {
              var percentageSound = (sound/90.7461139896373)*100
              var percentageNOX = (NOX/1.4849881485383196)*100
-             var percentageCO = ((1-CO)/1)*100
+             var percentageCO = (CO/454.96)*100
 
              return (percentageSound+percentageNOX+percentageCO)/3;
          }
