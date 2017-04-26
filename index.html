@@ -114,7 +114,6 @@
 					       checkboxDiv.children[i].children[0].checked = true;
 
 				     checkboxDiv.toggleOverlays = function(element) {
-                 console.log(Object.keys(routes));
 					       var pollutant = element.nextSibling.textContent.trim();
                  for (var id in coordinates) {
 					           routes[id][pollutant].set("opacity", routes[id][pollutant].get("opacity") > 0 ? 0 : 0.3);
